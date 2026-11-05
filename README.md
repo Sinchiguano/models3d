@@ -12,7 +12,7 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 | CESAR keyring V1–V3 | `CESAR_KEYRING*.blend/.stl` | The first project, and the reference size for all keyrings. V3 has separate base and letter parts. |
 | SAORI two-colour keyring | `SAORI_KEYRING_build.py`, `_BASE.stl`, `_LETTERS.stl`, `_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
 | ROBOTIA two-colour keyring | `ROBOTIA_2COLOR_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PETG_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
-| Saori two-colour keyring | `SAORI_2COLOR_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PETG_2COLOR.gcode` | Mixed-case version of SAORI. Black base with white letters, printed with a filament swap (M600) |
+| Saori two-colour keyring | `SAORI_2COLOR_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PLA_2COLOR.gcode`, `_Ender3S1_PETG_2COLOR.gcode` | Mixed-case version of SAORI. Black base with white letters, printed with a filament swap (M600) |
 | Autonomous car | `AUTONOMOUS_CAR_build.py`, `AUTONOMOUS_CAR.blend`, `AUTONOMOUS_CAR_print_parts/` | 4WD rover: RPi 5, LD06 LiDAR, Orbbec Astra Pro |
 | Test cylinder | `CYLINDER_D5_L15.*` | Ø5 × 15 mm |
 
