@@ -16,6 +16,7 @@ TEXT_SIZE, TEXT_BEVEL, TEXT_TOP = 20.0, 0.3, 5.0
 LETTER_SPACING = 1.045
 TEXT_GAP_LEFT = 9.25   # plate left edge -> text left edge (as in CESAR)
 TEXT_GAP_RIGHT = 2.75  # text right edge -> plate right edge
+MIN_STACK_GAP = 0.6    # minimum gap under the dot of i/j, so it prints separate from the stem
 
 def clean():
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -37,6 +38,35 @@ def to_mesh(obj):
     bm.to_mesh(me); bm.free()
     return new
 
+def open_stacked_gaps(m):
+    """Lift the dots of i/j: the bevel leaves only ~0.3 mm under them, which prints fused."""
+    bm = bmesh.new(); bm.from_mesh(m)
+    seen, islands = set(), []
+    for start in bm.verts:
+        if start in seen:
+            continue
+        seen.add(start); stack, island = [start], []
+        while stack:
+            v = stack.pop(); island.append(v)
+            for e in v.link_edges:
+                o = e.other_vert(v)
+                if o not in seen:
+                    seen.add(o); stack.append(o)
+        islands.append(island)
+    def box(isl):
+        xs = [v.co.x for v in isl]; ys = [v.co.y for v in isl]
+        return min(xs), max(xs), min(ys), max(ys)
+    boxes = [box(i) for i in islands]
+    for upper, (ux0, ux1, uy0, _) in zip(islands, boxes):
+        for lx0, lx1, _, ly1 in boxes:
+            gap = uy0 - ly1
+            if ux0 < lx1 and lx0 < ux1 and 0 <= gap < MIN_STACK_GAP:
+                for v in upper:
+                    v.co.y += MIN_STACK_GAP - gap
+                print(f"LIFTED stacked part by {MIN_STACK_GAP - gap:.2f} mm (gap was {gap:.2f} mm)")
+                break
+    bm.to_mesh(m); bm.free()
+
 def make_text(name, size=TEXT_SIZE):
     cu = bpy.data.curves.new("txt", 'FONT')
     cu.body = name
@@ -55,6 +85,7 @@ def make_text(name, size=TEXT_SIZE):
     # cut the rounded top off: flat top, same stroke width
     bpy.ops.mesh.primitive_cube_add(size=200, location=(0, 0, TEXT_TOP + 100))
     boolean(m, bpy.context.active_object, 'DIFFERENCE')
+    open_stacked_gaps(m.data)
     # recenter vertically on actual cap geometry
     ys = [v.co.y for v in m.data.vertices]; xs = [v.co.x for v in m.data.vertices]
     for v in m.data.vertices:

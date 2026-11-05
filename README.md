@@ -12,6 +12,7 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 | CESAR keyring V1–V3 | `CESAR_KEYRING*.blend/.stl` | The first project, and the reference size for all keyrings. V3 has separate base and letter parts. |
 | SAORI two-colour keyring | `SAORI_KEYRING_build.py`, `_BASE.stl`, `_LETTERS.stl`, `_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
 | ROBOTIA two-colour keyring | `ROBOTIA_2COLOR_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PETG_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
+| Saori two-colour keyring | `SAORI_2COLOR_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PETG_2COLOR.gcode` | Mixed-case version of SAORI. Black base with white letters, printed with a filament swap (M600) |
 | Autonomous car | `AUTONOMOUS_CAR_build.py`, `AUTONOMOUS_CAR.blend`, `AUTONOMOUS_CAR_print_parts/` | 4WD rover: RPi 5, LD06 LiDAR, Orbbec Astra Pro |
 | Test cylinder | `CYLINDER_D5_L15.*` | Ø5 × 15 mm |
 
@@ -34,6 +35,7 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 - **Hole:** Ø4 mm, centred 5 mm from the left edge. Ø3 printed almost closed.
 - **Letters:** DejaVu Sans Bold, about 9.5 mm cap height, raised 2 mm with a flat top, so the keyring is **5 mm** thick in total
 - **Long names:** the plate stays 60 mm and the letters shrink to fit the 48 mm text area. For example, LEGENDARIO's letters are 5.4 mm tall.
+- **Lowercase i and j:** the dot is lifted to leave a 0.6 mm gap above the stem, otherwise it prints fused
 - **Two colours:** base in colour 1 and letters in colour 2, with an M600 filament swap after Z = 3.0 mm
 
 ## How to make a new keyring
