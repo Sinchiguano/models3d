@@ -48,6 +48,9 @@ blender -b NAME_KEYRING.blend --python render_preview.py
 python slice_gcode.py NAME_KEYRING.stl --material petg
 #    two colours (one extruder, filament swap at the letters):
 python slice_gcode.py NAME_KEYRING.stl --material petg --color-change-z 3.0
+#    several models on one plate, one G-code (also writes NAME.stl; then PLATE_build.py -> NAME.blend):
+python slice_gcode.py A_KEYRING.stl B_KEYRING.stl --name A_B_KEYRINGS --material petg
+blender -b --python PLATE_build.py -- A_B_KEYRINGS.stl
 ```
 
 The name is used exactly as typed (`Legendario` and `LEGENDARIO` give different results). File names are always in capitals.
