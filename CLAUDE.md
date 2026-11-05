@@ -33,4 +33,6 @@ This is my 3D model library. It is synced with GitHub and I use it on several co
 ## Git
 - Commit the sources and outputs: `.blend`, `.stl`, `.png`, `.gcode`, `.py`, `.ini`.
 - Don't commit Blender backup files (`*.blend1`); `.gitignore` handles them.
-- Commit or push only when I ask.
+- Keep the GitHub repository up to date: when a model or change is finished, commit it and push it without waiting to be asked.
+  If it's unclear whether something is finished or belongs in the repo (e.g. stray images, experiments), ask me first.
+- If a push fails (e.g. expired login), tell me how to fix it; the commit stays local until then.
