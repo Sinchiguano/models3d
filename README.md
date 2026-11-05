@@ -11,6 +11,7 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 | Name keyrings | `<NAME>_KEYRING.blend / .stl / _preview.png / _Ender3S1_PETG.gcode` | CESAR, JAVIER, NATHALY, SAORI, LEGENDARIO |
 | CESAR keyring V1–V3 | `CESAR_KEYRING*.blend/.stl` | The first project, and the reference size for all keyrings. V3 has separate base and letter parts. |
 | SAORI two-colour keyring | `SAORI_KEYRING_build.py`, `_BASE.stl`, `_LETTERS.stl`, `_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
+| ROBOTIA two-colour keyring | `ROBOTIA_2COLOR_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PETG_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
 | Autonomous car | `AUTONOMOUS_CAR_build.py`, `AUTONOMOUS_CAR.blend`, `AUTONOMOUS_CAR_print_parts/` | 4WD rover: RPi 5, LD06 LiDAR, Orbbec Astra Pro |
 | Test cylinder | `CYLINDER_D5_L15.*` | Ø5 × 15 mm |
 
@@ -20,6 +21,7 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 |---|---|
 | `NAME_KEYRING_build.py` | Builds a one-colour name keyring (`.blend` + `.stl`) |
 | `SAORI_KEYRING_build.py` | Example of a two-colour keyring (base and letters as separate parts) |
+| `TWOCOLOR_KEYRING_build.py` | Builds a two-colour name keyring: `blender -b --python TWOCOLOR_KEYRING_build.py -- NAME` |
 | `render_preview.py` | Renders `<model>_preview.png` from a `.blend` |
 | `slice_gcode.py` | Slices an STL to Ender-3 S1 G-code with the profiles in `slicer_profiles/` and can add a colour change |
 | `slicer_profiles/ender3s1_{petg,pla}.ini` | My tuned PrusaSlicer profiles |
