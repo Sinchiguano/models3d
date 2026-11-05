@@ -23,13 +23,14 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 | `render_preview.py` | Renders `<model>_preview.png` from a `.blend` |
 | `slice_gcode.py` | Slices an STL to Ender-3 S1 G-code with the profiles in `slicer_profiles/` and can add a colour change |
 | `slicer_profiles/ender3s1_{petg,pla}.ini` | My tuned PrusaSlicer profiles |
+| `slicer_profiles/keyring_overrides.ini` | Extra settings for keyrings (`slice_gcode.py --keyring`) |
 | `fonts/DejaVuSans-Bold.ttf` | Keyring font, included so the letters are the same on every OS |
 
 ## Standard keyring size (from CESAR V1)
 
 - **Plate:** 60 × 25 × 3 mm, with 2 mm rounded corners and 0.5 mm rounded edges
 - **Hole:** Ø4 mm, centred 5 mm from the left edge. Ø3 printed almost closed.
-- **Letters:** DejaVu Sans Bold, about 9.5 mm cap height, raised 2 mm, so the keyring is **5 mm** thick in total
+- **Letters:** DejaVu Sans Bold, about 9.5 mm cap height, raised 2 mm with a flat top, so the keyring is **5 mm** thick in total
 - **Long names:** the plate stays 60 mm and the letters shrink to fit the 48 mm text area. For example, LEGENDARIO's letters are 5.4 mm tall.
 - **Two colours:** base in colour 1 and letters in colour 2, with an M600 filament swap after Z = 3.0 mm
 
@@ -45,11 +46,11 @@ blender -b --python NAME_KEYRING_build.py -- NAME
 blender -b NAME_KEYRING.blend --python render_preview.py
 
 # 3. G-code -> NAME_KEYRING_Ender3S1_PETG.gcode
-python slice_gcode.py NAME_KEYRING.stl --material petg
+python slice_gcode.py NAME_KEYRING.stl --material petg --keyring
 #    two colours (one extruder, filament swap at the letters):
-python slice_gcode.py NAME_KEYRING.stl --material petg --color-change-z 3.0
+python slice_gcode.py NAME_KEYRING.stl --material petg --keyring --color-change-z 3.0
 #    several models on one plate, one G-code (also writes NAME.stl; then PLATE_build.py -> NAME.blend):
-python slice_gcode.py A_KEYRING.stl B_KEYRING.stl --name A_B_KEYRINGS --material petg
+python slice_gcode.py A_KEYRING.stl B_KEYRING.stl --name A_B_KEYRINGS --material petg --keyring
 blender -b --python PLATE_build.py -- A_B_KEYRINGS.stl
 ```
 
@@ -61,7 +62,7 @@ Creality Ender-3 S1: 220 × 220 × 270 mm bed, a single 0.4 mm direct-drive nozz
 
 | Material | Nozzle | Bed | Notes |
 |---|---|---|---|
-| PETG (default) | 240 °C first layer, then 235 °C | 80 °C | Tuned against stringing: 1.5 mm retract, wipe, ironing. Dry the filament if it still strings. |
+| PETG (default) | 240 °C first layer, then 225 °C | 80 °C | Tuned against stringing: 1.8 mm retract, 0.2 mm Z-hop, wipe, no ironing. Dry the filament if it still strings (about 65 °C for 4–6 h). |
 | PLA | 210 °C | 60 °C | |
 
 ## Setting up a new computer

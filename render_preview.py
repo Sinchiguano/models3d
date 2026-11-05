@@ -19,7 +19,7 @@ for ob in meshes:
 pts = [o.matrix_world @ Vector(c) for o in meshes for c in o.bound_box]
 lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
 hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
-center, size = (lo + hi) / 2, max((hi - lo).x, (hi - lo).y)
+center, size = (lo + hi) / 2, max((hi - lo).x, (hi - lo).y * 5 / 3)  # 5:3 image: deep models need more distance
 
 cam = bpy.data.objects.new("PreviewCam", bpy.data.cameras.new("PreviewCam"))
 s.collection.objects.link(cam); s.camera = cam

@@ -3,7 +3,7 @@
 Usage: blender -b --python NAME_KEYRING_build.py -- NAME [NAME ...]
 Same specs as CESAR: plate 25 mm tall x 3 mm thick, R2 corners, 0.5 mm rounded edges,
 Ø4 mm hole (CESAR had Ø3) 5 mm from the left edge, DejaVu Sans Bold letters ~9.5 mm cap height,
-raised 2 mm with 0.3 mm rounded top. Plate is always 60 x 25 x 5 mm like CESAR;
+raised 2 mm with a flat top (rounded tops printed lumpy at 0.2 mm layers). Plate is always 60 x 25 x 5 mm like CESAR;
 longer names get smaller letters so they fit the same 48 mm text area.
 """
 import bpy, bmesh, sys, os, math
@@ -46,12 +46,15 @@ def make_text(name, size=TEXT_SIZE):
     cu.bevel_depth = TEXT_BEVEL
     cu.bevel_resolution = 2
     cu.space_character = LETTER_SPACING
-    cu.extrude = 0.8
+    cu.extrude = 1.1  # bottom bevel stays buried in the plate
     cu.resolution_u = 6
     ob = bpy.data.objects.new("txt", cu)
     bpy.context.collection.objects.link(ob)
-    ob.location.z = TEXT_TOP - TEXT_BEVEL - cu.extrude  # bottom buried in plate
+    ob.location.z = TEXT_TOP - cu.extrude  # widest outline reaches exactly TEXT_TOP
     m = to_mesh(ob)
+    # cut the rounded top off: flat top, same stroke width
+    bpy.ops.mesh.primitive_cube_add(size=200, location=(0, 0, TEXT_TOP + 100))
+    boolean(m, bpy.context.active_object, 'DIFFERENCE')
     # recenter vertically on actual cap geometry
     ys = [v.co.y for v in m.data.vertices]; xs = [v.co.x for v in m.data.vertices]
     for v in m.data.vertices:
@@ -98,6 +101,8 @@ def build(name):
     boolean(plate, bpy.context.active_object, 'DIFFERENCE')
     text_dims = tuple(text.dimensions)
     boolean(plate, text, 'UNION')
+    if abs(plate.dimensions.z - TEXT_TOP) > 0.01:  # a failed union silently drops the letters
+        sys.exit(f"ERROR {name}: letters missing, height {plate.dimensions.z:.2f} mm, expected {TEXT_TOP} mm")
     plate.name = f"{name}_Keychain"
     tag = name.upper()
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, f"{tag}_KEYRING.blend"))

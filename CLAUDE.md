@@ -4,6 +4,7 @@ This is my 3D model library. It is synced with GitHub and I use it on several co
 
 ## Keep me informed
 - Always tell me what you're about to do before doing it (build, slice, rename, commit, push, edit rules), and report what you did afterwards.
+- Telling is not asking: don't ask my permission to proceed. Pick the sensible option, do it and report it. Ask only for information you can't work out, like a keyring's name.
 
 ## Goal and workflow
 - I design models for my **Creality Ender-3 S1**: 220 × 220 × 270 mm bed, one 0.4 mm nozzle, no multi-material unit.
@@ -22,7 +23,7 @@ This is my 3D model library. It is synced with GitHub and I use it on several co
 
 ## Keyrings (most common request)
 - "Same size as before" means the CESAR V1 standard in README.md: 60 × 25 × 3 mm plate, Ø4 hole, letters +2 mm, DejaVu Sans Bold.
-  Use `NAME_KEYRING_build.py`. Long names shrink the letters; the plate stays 60 mm unless I ask otherwise.
+  Use `NAME_KEYRING_build.py` and slice with `slice_gcode.py --keyring`. Long names shrink the letters; the plate stays 60 mm unless I ask otherwise.
 - Ask me only for anything I haven't said: the **name** (and capitals or as typed), **one or two colours**, and **PLA or PETG** (default PETG).
 - Two colours = one extruder + M600 swap: `slice_gcode.py --color-change-z 3.0`. See `SAORI_KEYRING_build.py` for separate base and letter parts.
 - Don't overwrite an existing model's files: rename the old version first (e.g. `_mixedcase`, `_v1`).
@@ -37,5 +38,5 @@ This is my 3D model library. It is synced with GitHub and I use it on several co
 - Commit the sources and outputs: `.blend`, `.stl`, `.png`, `.gcode`, `.py`, `.ini`.
 - Don't commit Blender backup files (`*.blend1`); `.gitignore` handles them.
 - Keep the GitHub repository up to date: when a model or change is finished, commit it and push it without waiting to be asked.
-  If it's unclear whether something is finished or belongs in the repo (e.g. stray images, experiments), ask me first.
+  If it's unclear whether something belongs in the repo (e.g. stray images, experiments), leave it uncommitted and mention it in your report.
 - If a push fails (e.g. expired login), tell me how to fix it; the commit stays local until then.
