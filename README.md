@@ -13,6 +13,7 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 | SAORI two-colour keyring | `SAORI_KEYRING_build.py`, `_BASE.stl`, `_LETTERS.stl`, `_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
 | ROBOTIA two-colour keyring | `ROBOTIA_2COLOR_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PETG_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
 | Saori two-colour keyring | `SAORI_2COLOR_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PLA_2COLOR.gcode`, `_Ender3S1_PETG_2COLOR.gcode` | Mixed-case version of SAORI. Black base with white letters, printed with a filament swap (M600) |
+| C & F heart keyring | `CF_HEART_KEYRING.blend / .stl / _preview.png`, `_Ender3S1_PLA.gcode` | Round Ø30 × 3 mm monogram with heart, made from `Gray C&F Heart Pendant CAD Diagram.png` |
 | Autonomous car | `AUTONOMOUS_CAR_build.py`, `AUTONOMOUS_CAR.blend`, `AUTONOMOUS_CAR_print_parts/` | 4WD rover: RPi 5, LD06 LiDAR, Orbbec Astra Pro |
 | Test cylinder | `CYLINDER_D5_L15.*` | Ø5 × 15 mm |
 
@@ -23,11 +24,14 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 | `NAME_KEYRING_build.py` | Builds a one-colour name keyring (`.blend` + `.stl`) |
 | `SAORI_KEYRING_build.py` | Example of a two-colour keyring (base and letters as separate parts) |
 | `TWOCOLOR_KEYRING_build.py` | Builds a two-colour name keyring: `blender -b --python TWOCOLOR_KEYRING_build.py -- NAME` |
+| `HEART_MONOGRAM_KEYRING_build.py` | Builds a round monogram keyring with a heart: `blender -b --python HEART_MONOGRAM_KEYRING_build.py -- C F`. The tail trim is tuned for C, so check other initials where they meet the heart. |
 | `render_preview.py` | Renders `<model>_preview.png` from a `.blend` |
 | `slice_gcode.py` | Slices an STL to Ender-3 S1 G-code with the profiles in `slicer_profiles/` and can add a colour change |
 | `slicer_profiles/ender3s1_{petg,pla}.ini` | My tuned PrusaSlicer profiles |
 | `slicer_profiles/keyring_overrides.ini` | Extra settings for keyrings (`slice_gcode.py --keyring`) |
+| `slicer_profiles/keyring_fine_overrides.ini` | Best quality for small relief keyrings in PLA: 0.12 mm layers, slow walls, ironed tops (`--keyring --fine`) |
 | `fonts/DejaVuSans-Bold.ttf` | Keyring font, included so the letters are the same on every OS |
+| `fonts/LibreBaskerville-Variable.ttf` | Serif font for the monogram keyring (SIL Open Font License) |
 
 ## Standard keyring size (from CESAR V1)
 

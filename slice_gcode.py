@@ -4,6 +4,7 @@ Usage:
   python slice_gcode.py MODEL.stl [--material petg|pla] [--color-change-z 3.0]
   python slice_gcode.py A.stl B.stl --name A_B   (several models on one plate, one G-code)
   python slice_gcode.py MODEL.stl --keyring      (adds slicer_profiles/keyring_overrides.ini: cleaner small letters)
+  python slice_gcode.py MODEL.stl --keyring --fine   (also keyring_fine_overrides.ini: 0.12 mm layers, ironed tops, PLA)
 
 Output: MODEL_Ender3S1_PETG.gcode (or _PLA, plus _2COLOR when --color-change-z is used),
 written next to the STL. --color-change-z inserts M600 (filament swap) before the first
@@ -87,6 +88,7 @@ def main():
     ap.add_argument("--material", choices=["petg", "pla"], default="petg")
     ap.add_argument("--color-change-z", type=float)
     ap.add_argument("--keyring", action="store_true", help="apply keyring_overrides.ini for small raised letters")
+    ap.add_argument("--fine", action="store_true", help="apply keyring_fine_overrides.ini: slow, 0.12 mm layers, ironed tops")
     a = ap.parse_args()
     profile = os.path.join(HERE, "slicer_profiles", f"ender3s1_{a.material}.ini")
     stls = [os.path.abspath(p) for p in a.stl]
@@ -98,6 +100,8 @@ def main():
         write_plate(stls, base + ".stl")
         stls = [base + ".stl"]
     overrides = ["--load", os.path.join(HERE, "slicer_profiles", "keyring_overrides.ini")] if a.keyring else []
+    if a.fine:
+        overrides += ["--load", os.path.join(HERE, "slicer_profiles", "keyring_fine_overrides.ini")]
     cmd = [find_prusaslicer(), "--export-gcode", "--load", profile, *overrides, "--center", "110,110",
            "--ensure-on-bed", "--output", out, stls[0]]
     subprocess.run(cmd, check=True)
