@@ -2,6 +2,9 @@
 
 This is my 3D model library. It is synced with GitHub and I use it on several computers (Linux, Windows, macOS). Follow these rules on every machine so I never have to repeat them. See README.md for the full specs and commands.
 
+## Keep me informed
+- Always tell me what you're about to do before doing it (build, slice, rename, commit, push, edit rules), and report what you did afterwards.
+
 ## Goal and workflow
 - I design models for my **Creality Ender-3 S1**: 220 × 220 × 270 mm bed, one 0.4 mm nozzle, no multi-material unit.
 - Build models with **Blender Python scripts run headless** (`blender -b --python script.py`). Don't build them by hand. Keep a reusable `*_build.py` for every new kind of model.
