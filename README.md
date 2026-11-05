@@ -8,7 +8,7 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 
 | Model | Files | Notes |
 |---|---|---|
-| Name keyrings | `<NAME>_KEYRING.blend / .stl / _preview.png / _Ender3S1_PETG.gcode` | CESAR, JAVIER, NATHALY, SAORI, LEGENDARIO |
+| Name keyrings | `<NAME>_KEYRING.blend / .stl / _preview.png / _Ender3S1_PETG.gcode` | CESAR, JAVIER, NATHALY, SAORI, LEGENDARIO, Gabriela, Aracely |
 | CESAR keyring V1–V3 | `CESAR_KEYRING*.blend/.stl` | The first project, and the reference size for all keyrings. V3 has separate base and letter parts. |
 | SAORI two-colour keyring | `SAORI_KEYRING_build.py`, `_BASE.stl`, `_LETTERS.stl`, `_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
 | ROBOTIA two-colour keyring | `ROBOTIA_2COLOR_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PETG_2COLOR.gcode` | Black base with white letters, printed with a filament swap (M600) |
