@@ -1,0 +1,6 @@
+# Blender autosave / backup files
+*.blend1
+*.blend2
+__pycache__/
+.DS_Store
+Thumbs.db
