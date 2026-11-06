@@ -16,6 +16,7 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 | Saori script keyring | `SAORI_SCRIPT_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PLA_2COLOR.gcode` | 60 × 30 × 5 mm, style of `newmodel.jpeg`: Lobster script letters (grey, +2 mm) on a black 3 mm base that follows the letter outline, ring tab top left. M600 swap at Z = 3.0 |
 | Cesar script keyring | `CESAR_SCRIPT_KEYRING.blend / .stl / _BASE.stl / _LETTERS.stl / _preview.png`, `_Ender3S1_PLA_2COLOR.gcode` | 80 × 40 × 6 mm: 3 mm base + 3 mm Lobster letters. Fine PLA slicing, M600 swap at Z = 3.0. `_v1` is the older 3 mm thick version (2.04 + 0.96 mm) |
 | C & F heart keyring | `CF_HEART_KEYRING.blend / .stl / _preview.png`, `_Ender3S1_PLA.gcode` | Round Ø30 × 3 mm monogram with heart, made from `Gray C&F Heart Pendant CAD Diagram.png` |
+| Calibration tests | `BED_LEVEL_TEST`, `TEMP_TOWER`, `RETRACTION_TEST` (`.blend / .stl / _preview.png / _Ender3S1_PLA.gcode`) | Bed level (5 squares, 1 layer), temperature tower 220→190 °C (8 mm sections), retraction 0.4→2.4 mm (6 mm sections, from 1.6 mm). Grooves mark each section. |
 | Autonomous car | `AUTONOMOUS_CAR_build.py`, `AUTONOMOUS_CAR.blend`, `AUTONOMOUS_CAR_print_parts/` | 4WD rover: RPi 5, LD06 LiDAR, Orbbec Astra Pro |
 | Test cylinder | `CYLINDER_D5_L15.*` | Ø5 × 15 mm |
 
@@ -28,6 +29,8 @@ This folder is synced with GitHub so I can work from any computer (Linux, Window
 | `TWOCOLOR_KEYRING_build.py` | Builds a two-colour name keyring: `blender -b --python TWOCOLOR_KEYRING_build.py -- NAME` |
 | `SCRIPT_KEYRING_build.py` | Builds a two-colour cursive name keyring with an outline-shaped base: `blender -b --python SCRIPT_KEYRING_build.py -- Saori [WIDTH HEIGHT [BASE_T TOP]]` (default 60 × 30 mm, base 3 mm, overall 5 mm). Name is used as typed. |
 | `HEART_MONOGRAM_KEYRING_build.py` | Builds a round monogram keyring with a heart: `blender -b --python HEART_MONOGRAM_KEYRING_build.py -- C F`. The tail trim is tuned for C, so check other initials where they meet the heart. |
+| `CALIBRATION_build.py` | Builds the three calibration test models: `blender -b --python CALIBRATION_build.py` |
+| `calibration_gcode.py` | Slices the tests and writes the temperature / retraction steps into the G-code: `python calibration_gcode.py [--material pla] [--retraction-temp 200]` |
 | `render_preview.py` | Renders `<model>_preview.png` from a `.blend` |
 | `slice_gcode.py` | Slices an STL to Ender-3 S1 G-code with the profiles in `slicer_profiles/` and can add a colour change |
 | `slicer_profiles/ender3s1_{petg,pla}.ini` | My tuned PrusaSlicer profiles |
