@@ -1,11 +1,13 @@
 """Two-colour script-name keyring: cursive letters on a base that follows the letter outline,
 with a round tab and ring hole at the top left (style of newmodel.jpeg, the "Nicole" keyring).
 
-Usage: blender -b --python SCRIPT_KEYRING_build.py -- NAME [WIDTH HEIGHT]
+Usage: blender -b --python SCRIPT_KEYRING_build.py -- NAME [WIDTH HEIGHT [BASE_T TOP]]
   NAME is used exactly as typed (e.g. Saori). WIDTH x HEIGHT is the overall size in mm (default 60 x 30).
+  BASE_T is the base thickness and TOP the overall thickness in mm (default 3 and 5). Slice with
+  --color-change-z BASE_T; pick a BASE_T that is a layer boundary (--fine: 0.24 + 0.12 n, e.g. 2.04 or 3.0).
 Writes next to this script:
   NAME_SCRIPT_KEYRING.blend                  base + letters as two coloured objects
-  NAME_SCRIPT_KEYRING.stl                    single solid for slicing (M600 colour change at Z = 3.0)
+  NAME_SCRIPT_KEYRING.stl                    single solid for slicing (M600 colour change at Z = BASE_T)
   NAME_SCRIPT_KEYRING_BASE.stl / _LETTERS.stl   separate parts (for a multi-material slicer)
 
 How the outline is made: the letters are turned into a signed-distance grid (geometry nodes),
@@ -17,7 +19,6 @@ import bpy, bmesh, os, sys, math
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONT = os.path.join(HERE, "fonts", "Lobster-Regular.otf")  # bundled script font (OFL)
-BASE_T, TOP = 3.0, 5.0         # base 3 mm (colour 1), letters raised to 5 mm (colour 2)
 OUTLINE = 2.5                  # base border around the letters
 CLOSE = 2.0                    # extra radius that fills gaps inside/between letters
 HOLE_D, TAB_WALL = 4.0, 2.5    # ring hole (4 mm prints ~3.5) and the wall around it
@@ -30,6 +31,10 @@ BASE_RGB, LETTERS_RGB = (0.02, 0.02, 0.02), (0.45, 0.45, 0.47)  # black base, gr
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else ["Saori"]
 NAME = args[0]
 WIDTH, HEIGHT = (float(args[1]), float(args[2])) if len(args) >= 3 else (60.0, 30.0)
+# base (colour 1) and overall thickness; the letters (colour 2) rise from BASE_T to TOP
+BASE_T, TOP = (float(args[3]), float(args[4])) if len(args) >= 5 else (3.0, 5.0)
+# keep the mesh, and so the STL size, about constant on bigger keyrings (GitHub limit: 100 MB per file)
+VOXEL_BASE, VOXEL_LETTERS = (v * max(1.0, WIDTH / 60.0) for v in (VOXEL_BASE, VOXEL_LETTERS))
 TAG = f"{NAME.upper()}_SCRIPT_KEYRING"
 
 
