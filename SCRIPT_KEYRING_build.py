@@ -2,7 +2,7 @@
 with a round tab and ring hole at the top left (style of newmodel.jpeg, the "Nicole" keyring).
 
 Usage: blender -b --python SCRIPT_KEYRING_build.py -- NAME [WIDTH HEIGHT [BASE_T TOP]]
-  NAME is used exactly as typed (e.g. Saori). WIDTH x HEIGHT is the overall size in mm (default 60 x 30).
+  NAME is used exactly as typed (e.g. Saori); "|" starts a new line (e.g. "Veker|Express"). WIDTH x HEIGHT is the overall size in mm (default 60 x 30).
   BASE_T is the base thickness and TOP the overall thickness in mm (default 3 and 5). Slice with
   --color-change-z BASE_T; pick a BASE_T that is a layer boundary (--fine: 0.24 + 0.12 n, e.g. 2.04 or 3.0).
 Writes next to this script:
@@ -25,17 +25,20 @@ HOLE_D, TAB_WALL = 4.0, 2.5    # ring hole (4 mm prints ~3.5) and the wall aroun
 HOLE_CLEAR = 1.2               # minimum distance from the hole to the letters
 TAB_RISE = 0.5                 # hole centre this far above the top of the letters
 LETTER_SPACING = 1.0
+LINE_SPACING = float(os.environ.get("LINE_SPACING", "0.55"))  # two-line names: gap between lines (1 = font default)
 VOXEL_BASE, VOXEL_LETTERS = 0.08, 0.05
 BASE_RGB, LETTERS_RGB = (0.02, 0.02, 0.02), (0.45, 0.45, 0.47)  # black base, grey letters
 
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else ["Saori"]
-NAME = args[0]
+NAME = args[0].replace("|", "\n")       # "|" = line break, lines are centred
 WIDTH, HEIGHT = (float(args[1]), float(args[2])) if len(args) >= 3 else (60.0, 30.0)
 # base (colour 1) and overall thickness; the letters (colour 2) rise from BASE_T to TOP
 BASE_T, TOP = (float(args[3]), float(args[4])) if len(args) >= 5 else (3.0, 5.0)
 # keep the mesh, and so the STL size, about constant on bigger keyrings (GitHub limit: 100 MB per file)
-VOXEL_BASE, VOXEL_LETTERS = (v * max(1.0, WIDTH / 60.0) for v in (VOXEL_BASE, VOXEL_LETTERS))
-TAG = f"{NAME.upper()}_SCRIPT_KEYRING"
+# (two-line names have twice the letter surface, so the grid is sqrt(lines) coarser)
+VOXEL_BASE, VOXEL_LETTERS = (v * max(1.0, WIDTH / 60.0) * math.sqrt(NAME.count("\n") + 1)
+                             for v in (VOXEL_BASE, VOXEL_LETTERS))
+TAG = "_".join(NAME.upper().split()) + "_SCRIPT_KEYRING"   # spaces/line breaks -> _
 
 
 def clean():
@@ -62,8 +65,9 @@ def text_mesh(size, z0, z1):
     cu.body = NAME
     cu.font = bpy.data.fonts.load(FONT)
     cu.size = size
-    cu.align_x, cu.align_y = 'LEFT', 'CENTER'
+    cu.align_x, cu.align_y = 'CENTER', 'CENTER'
     cu.space_character = LETTER_SPACING
+    cu.space_line = LINE_SPACING
     cu.extrude = (z1 - z0) / 2
     cu.resolution_u = 8
     ob = bpy.data.objects.new("txt", cu)
@@ -203,16 +207,17 @@ for o in (base, letters):
         v.co.y = (v.co.y - (y0 + y1) / 2) * sy
 
 # 4) single solid for one-extruder printing
-solid = bpy.data.objects.new(f"{NAME}_Solid", base.data.copy())
+LABEL = "_".join(NAME.split())
+solid = bpy.data.objects.new(f"{LABEL}_Solid", base.data.copy())
 bpy.context.collection.objects.link(solid)
 tmp = bpy.data.objects.new("tmp", letters.data.copy())
 bpy.context.collection.objects.link(tmp)
 boolean(solid, tmp, 'UNION')
 bpy.context.view_layer.update()
 if abs(solid.dimensions.z - TOP) > 0.01 or abs(letters.dimensions.z - (TOP - BASE_T)) > 0.01:
-    sys.exit(f"ERROR {NAME}: parts wrong, solid {solid.dimensions.z:.2f} mm, letters {letters.dimensions.z:.2f} mm")
+    sys.exit(f"ERROR {LABEL}: parts wrong, solid {solid.dimensions.z:.2f} mm, letters {letters.dimensions.z:.2f} mm")
 
-base.name, letters.name = f"{NAME}_Base", f"{NAME}_Letters"
+base.name, letters.name = f"{LABEL}_Base", f"{LABEL}_Letters"
 for part, mat in ((base, material("Base_colour", BASE_RGB)), (letters, material("Letters_colour", LETTERS_RGB))):
     part.data.materials.clear()
     part.data.materials.append(mat)
