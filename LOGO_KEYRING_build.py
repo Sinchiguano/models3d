@@ -1,8 +1,7 @@
 """Two-colour logo keyring: graphic traced from a picture + text lines in DejaVu Sans Bold.
 
 Usage: blender -b --python LOGO_KEYRING_build.py -- IMAGE.png NAME "LINE1|LINE2" [WIDTH HEIGHT]
-Example (INSTAFRIO):
-  blender -b --python LOGO_KEYRING_build.py -- INSTAFRIO_logo.png INSTAFRIO "INSTAFRIO|REFRIGERACIÓN Y CLIMATIZACIÓN"
+Example: blender -b --python LOGO_KEYRING_build.py -- ACME_logo.png ACME "ACME|small subtitle"
 
 The picture must be a dark logo on a light background. The topmost block of dark pixels (the
 graphic above the text) is traced with marching squares; the text in the picture is ignored and
@@ -31,7 +30,7 @@ SUB_H, MAIN_H = 3.4, 7.5               # text bounding-box heights (sub includes
 GAP_SUB, GAP_GRAPHIC = 1.8, 2.3
 THRESH = 0.6                           # luminance threshold: below = ink
 # text lines in the picture (default: as many as on the keyring); set it when you drop a line,
-# e.g. IMAGE_LINES=2 for the INSTAFRIO picture with only "INSTAFRIO" on the keyring
+# e.g. IMAGE_LINES=2 for a picture with two text lines when only the first goes on the keyring
 IMAGE_LINES = int(os.environ.get("IMAGE_LINES", len(LINES)))
 # base shape: "outline" (default) follows the logo with a round ring tab, like the script
 # keyrings; SHAPE=rect gives the plain rounded rectangle of WIDTH x HEIGHT
