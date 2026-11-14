@@ -7,7 +7,8 @@ Example (INSTAFRIO):
 The picture must be a dark logo on a light background. The topmost block of dark pixels (the
 graphic above the text) is traced with marching squares; the text in the picture is ignored and
 redrawn from the font, which is much sharper than tracing small low-resolution letters.
-Layout from the bottom: last line (small), first line (large), graphic on top, hole top left.
+Layout from the bottom: last line (small), first line (large), graphic on top. The base follows the
+logo outline with a ring tab on the left (SHAPE=rect: rounded WIDTH x HEIGHT rectangle, hole top left).
 Base PLATE_T mm (colour 1) + logo raised RAISE mm (colour 2): slice with --color-change-z PLATE_T.
 Outputs NAME_KEYRING.blend / .stl (one solid) / _BASE.stl / _LOGO.stl.
 """
@@ -29,6 +30,31 @@ TEXT_W = PLATE_W - 2 * MARGIN
 SUB_H, MAIN_H = 3.4, 7.5               # text bounding-box heights (sub includes accents)
 GAP_SUB, GAP_GRAPHIC = 1.8, 2.3
 THRESH = 0.6                           # luminance threshold: below = ink
+# base shape: "outline" (default) follows the logo with a round ring tab, like the script
+# keyrings; SHAPE=rect gives the plain rounded rectangle of WIDTH x HEIGHT
+SHAPE = os.environ.get("SHAPE", "outline")
+OUTLINE, CLOSE = 2.5, 2.0              # border around the logo; extra radius that fills gaps
+TAB_WALL, HOLE_CLEAR, TAB_RISE = 2.5, 1.2, 0.5
+VOXEL = 0.1
+
+def sdf(obj, voxel, offset):
+    """Grow (or shrink, offset < 0) obj by offset mm through a signed-distance grid."""
+    ng = bpy.data.node_groups.new("sdf", 'GeometryNodeTree')
+    ng.interface.new_socket("Geometry", in_out='INPUT', socket_type='NodeSocketGeometry')
+    ng.interface.new_socket("Geometry", in_out='OUTPUT', socket_type='NodeSocketGeometry')
+    gi, go = ng.nodes.new("NodeGroupInput"), ng.nodes.new("NodeGroupOutput")
+    m2s = ng.nodes.new("GeometryNodeMeshToSDFGrid")
+    m2s.inputs["Voxel Size"].default_value = voxel
+    m2s.inputs["Band Width"].default_value = int(abs(offset) / voxel) + 3
+    g2m = ng.nodes.new("GeometryNodeGridToMesh")
+    g2m.inputs["Threshold"].default_value = offset
+    g2m.inputs["Adaptivity"].default_value = 0.0
+    ng.links.new(gi.outputs[0], m2s.inputs["Mesh"])
+    ng.links.new(m2s.outputs[0], g2m.inputs["Grid"])
+    ng.links.new(g2m.outputs[0], go.inputs[0])
+    mod = obj.modifiers.new("sdf", 'NODES'); mod.node_group = ng
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.modifier_apply(modifier=mod.name)
 
 # ---------- trace the graphic ----------
 def load_luma(path):
@@ -166,15 +192,36 @@ parts = []
 if len(LINES) > 1:
     parts.append(make_line(LINES[1], TEXT_W, SUB_H, y, 1.1)); y += SUB_H + GAP_SUB
 parts.append(make_line(LINES[0], TEXT_W, MAIN_H, y, 1.0)); y += MAIN_H + GAP_GRAPHIC
+main_top = y - GAP_GRAPHIC
 top = PLATE_HT / 2 - MARGIN
 parts.append(make_graphic(top - y, top))
 
 logo = parts[0]
 for p in parts[1:]:
     boolean(logo, p, 'UNION')
-plate = make_plate()
-bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=HOLE_D / 2, depth=10,
-                                    location=(-PLATE_W / 2 + HOLE_INSET, PLATE_HT / 2 - HOLE_INSET, 1.5))
+if SHAPE == "rect":
+    plate = make_plate()
+    hx, hy = -PLATE_W / 2 + HOLE_INSET, PLATE_HT / 2 - HOLE_INSET
+else:
+    # base follows the logo outline (like SCRIPT_KEYRING_build.py), with a round tab for the ring
+    plate = copy(logo, "base")
+    for v in plate.data.vertices:            # logo is z 2..5: stretch to -3..6 so the border is
+        v.co.z = (v.co.z - 2.0) * 3.0 - 3.0  # straight-sided through the 0..3 slab
+    pts = [(v.co.x, v.co.y) for v in logo.data.vertices]
+    hx, hy = min(p[0] for p in pts) + 3.0, main_top + TAB_RISE
+    while min(math.hypot(px - hx, py - hy) for px, py in pts) < HOLE_D / 2 + HOLE_CLEAR:
+        hx -= 0.1
+    bpy.ops.mesh.primitive_cylinder_add(vertices=96, radius=HOLE_D / 2 + TAB_WALL - OUTLINE,
+                                        depth=9.0, location=(hx, hy, 1.5))
+    tab = bpy.context.active_object
+    bpy.ops.object.select_all(action='DESELECT'); plate.select_set(True); tab.select_set(True)
+    bpy.context.view_layer.objects.active = plate; bpy.ops.object.join()
+    sdf(plate, VOXEL, OUTLINE + CLOSE)       # grow ...
+    sdf(plate, VOXEL, -CLOSE)                # ... and shrink back: gaps between parts stay filled
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, PLATE_T / 2))
+    box = bpy.context.active_object; box.scale = (500, 500, PLATE_T)
+    boolean(plate, box, 'INTERSECT')
+bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=HOLE_D / 2, depth=10, location=(hx, hy, 1.5))
 boolean(plate, bpy.context.active_object, 'DIFFERENCE')
 
 # logo part = only what sits above the plate top, so the colours split cleanly at Z = PLATE_T
