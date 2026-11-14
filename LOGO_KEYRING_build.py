@@ -30,6 +30,9 @@ TEXT_W = PLATE_W - 2 * MARGIN
 SUB_H, MAIN_H = 3.4, 7.5               # text bounding-box heights (sub includes accents)
 GAP_SUB, GAP_GRAPHIC = 1.8, 2.3
 THRESH = 0.6                           # luminance threshold: below = ink
+# text lines in the picture (default: as many as on the keyring); set it when you drop a line,
+# e.g. IMAGE_LINES=2 for the INSTAFRIO picture with only "INSTAFRIO" on the keyring
+IMAGE_LINES = int(os.environ.get("IMAGE_LINES", len(LINES)))
 # base shape: "outline" (default) follows the logo with a round ring tab, like the script
 # keyrings; SHAPE=rect gives the plain rounded rectangle of WIDTH x HEIGHT
 SHAPE = os.environ.get("SHAPE", "outline")
@@ -71,8 +74,8 @@ def graphic_crop(lum):
         if b - a > 3:
             bands.append((start, a)); start = b
     bands.append((start, rows[-1]))
-    # bottom bands = the text lines (one per line); everything above them is the graphic
-    r0, r1 = bands[len(LINES)][0], rows[-1]
+    # bottom bands = the text lines of the picture; everything above them is the graphic
+    r0, r1 = bands[IMAGE_LINES][0], rows[-1]
     cols = np.where((lum[r0:r1 + 1] < THRESH).any(axis=0))[0]
     p = 2
     return np.pad(lum[r0:r1 + 1, cols[0]:cols[-1] + 1], p, constant_values=1.0)
