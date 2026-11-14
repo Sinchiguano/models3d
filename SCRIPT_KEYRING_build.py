@@ -24,6 +24,7 @@ CLOSE = 2.0                    # extra radius that fills gaps inside/between let
 HOLE_D, TAB_WALL = 4.0, 2.5    # ring hole (4 mm prints ~3.5) and the wall around it
 HOLE_CLEAR = 1.2               # minimum distance from the hole to the letters
 TAB_RISE = 0.5                 # hole centre this far above the top of the letters
+NECK_W = 6.0                   # minimum width of the neck between the ring tab and the letters
 LETTER_SPACING = 1.0
 LINE_SPACING = float(os.environ.get("LINE_SPACING", "0.55"))  # two-line names: gap between lines (1 = font default)
 VOXEL_BASE, VOXEL_LETTERS = 0.08, 0.05
@@ -140,6 +141,53 @@ def hole_centre(pts, hole_r):
     return x, y
 
 
+def fill_holes(base):
+    """Close pockets left inside the base (gaps between letters/lines wider than 2 x CLOSE):
+    every boundary loop of the flat top except the outer one gets a filled prism."""
+    bm = bmesh.new(); bm.from_mesh(base.data)
+    top = {f for f in bm.faces if f.normal.z > 0.99 and abs(f.calc_center_median().z - BASE_T) < 1e-3}
+    edges = [e for e in bm.edges if sum(f in top for f in e.link_faces) == 1]
+    nbr = {}
+    for e in edges:
+        a, b = e.verts
+        nbr.setdefault(a, []).append(b); nbr.setdefault(b, []).append(a)
+    loops, seen = [], set()
+    for start in nbr:
+        if start in seen:
+            continue
+        loop, prev, cur = [], None, start
+        while cur not in seen:
+            seen.add(cur); loop.append((cur.co.x, cur.co.y))
+            nxt = [n for n in nbr[cur] if n is not prev and n not in seen]
+            if not nxt:
+                break
+            prev, cur = cur, nxt[0]
+        loops.append(loop)
+    bm.free()
+    area = lambda l: (max(p[0] for p in l) - min(p[0] for p in l)) * (max(p[1] for p in l) - min(p[1] for p in l))
+    loops.sort(key=area)
+    for l in loops[:-1]:                     # the biggest loop is the outside edge
+        if len(l) < 3:
+            continue
+        if sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(l, l[1:] + l[:1])) < 0:
+            l = l[::-1]                      # counter-clockwise, so the offset grows the plug
+        cu = bpy.data.curves.new("plug", 'CURVE'); cu.dimensions = '2D'; cu.fill_mode = 'BOTH'
+        cu.extrude = BASE_T / 2; cu.offset = 1.3          # a bit bigger so it overlaps the walls
+        sp = cu.splines.new('POLY'); sp.points.add(len(l) - 1); sp.use_cyclic_u = True
+        for p, (x, y) in zip(sp.points, l):
+            p.co = (x, y, 0, 1)
+        ob = bpy.data.objects.new("plug", cu); bpy.context.collection.objects.link(ob)
+        ob.location.z = BASE_T / 2
+        plug = to_mesh(ob)
+        pm = bmesh.new(); pm.from_mesh(plug.data)   # weld caps to sides: MANIFOLD needs a closed mesh
+        bmesh.ops.remove_doubles(pm, verts=pm.verts, dist=1e-4)
+        bmesh.ops.recalc_face_normals(pm, faces=pm.faces)
+        pm.to_mesh(plug.data); pm.free()
+        print(f"FILLED hole in the base: hole box {area(l):.1f} mm2, plug {plug.dimensions.x:.2f} x {plug.dimensions.y:.2f} mm "
+              f"(hole {max(p[0] for p in l) - min(p[0] for p in l):.2f} x {max(p[1] for p in l) - min(p[1] for p in l):.2f})")
+        boolean(base, plug, 'UNION')
+
+
 def build_base(size):
     """Base outline (mesh, z 0..BASE_T) with the tab, and the hole centre."""
     tall = text_mesh(size, -2.0, BASE_T + 2.0)
@@ -148,11 +196,21 @@ def build_base(size):
     bpy.ops.mesh.primitive_cylinder_add(vertices=96, radius=HOLE_D / 2 + TAB_WALL - OUTLINE,
                                         depth=BASE_T + 4.0, location=(hx, hy, BASE_T / 2))
     tab = bpy.context.active_object
-    bpy.ops.object.select_all(action='DESELECT'); tall.select_set(True); tab.select_set(True)
+    # neck: a bar from the tab to the nearest letter point, NECK_W wide after the border grows
+    px, py = min(outline_pts(tall), key=lambda p: math.hypot(p[0] - hx, p[1] - hy))
+    d = math.hypot(px - hx, py - hy)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=((hx + px) / 2, (hy + py) / 2, BASE_T / 2))
+    neck = bpy.context.active_object
+    neck.scale = (d + 1.0, max(NECK_W - 2 * OUTLINE, 0.2), BASE_T + 4.0)
+    neck.rotation_euler.z = math.atan2(py - hy, px - hx)
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in (tall, tab, neck):
+        o.select_set(True)
     bpy.context.view_layer.objects.active = tall; bpy.ops.object.join()
     sdf(tall, VOXEL_BASE, OUTLINE + CLOSE)   # grow ...
     sdf(tall, VOXEL_BASE, -CLOSE)            # ... and shrink back: gaps stay filled
     slab(tall, 0.0, BASE_T)
+    fill_holes(tall)
     bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=HOLE_D / 2, depth=20, location=(hx, hy, 0))
     boolean(tall, bpy.context.active_object, 'DIFFERENCE')
     return tall
