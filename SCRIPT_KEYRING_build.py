@@ -5,6 +5,7 @@ Usage: blender -b --python SCRIPT_KEYRING_build.py -- NAME [WIDTH HEIGHT [BASE_T
   NAME is used exactly as typed (e.g. Saori); "|" starts a new line (e.g. "Veker|Express"). WIDTH x HEIGHT is the overall size in mm (default 60 x 30).
   BASE_T is the base thickness and TOP the overall thickness in mm (default 3 and 5). Slice with
   --color-change-z BASE_T; pick a BASE_T that is a layer boundary (--fine: 0.24 + 0.12 n, e.g. 2.04 or 3.0).
+  LOGO=robot (env var) adds a robot head above the name, ring hole on its antenna (-> NAME_ROBOT_SCRIPT_KEYRING).
 Writes next to this script:
   NAME_SCRIPT_KEYRING.blend                  base + letters as two coloured objects
   NAME_SCRIPT_KEYRING.stl                    single solid for slicing (M600 colour change at Z = BASE_T)
@@ -28,6 +29,12 @@ NECK_W = 6.0                   # minimum width of the neck between the ring tab 
 LETTER_SPACING = 1.0
 LINE_SPACING = float(os.environ.get("LINE_SPACING", "0.55"))  # two-line names: gap between lines (1 = font default)
 VOXEL_BASE, VOXEL_LETTERS = 0.08, 0.05
+# LOGO=robot: a robot head above the name (eyes and mouth cut down to the base),
+# with the ring hole on top of its antenna instead of at the top left
+LOGO = os.environ.get("LOGO", "").lower()
+ROBOT_W = 0.80        # head width, in units of the text size
+ROBOT_GAP = 0.10      # gap between the top of the letters and the head (text size units)
+ROBOT_CUTS = []       # eye/mouth outlines of the last text_mesh call (after recentering)
 BASE_RGB, LETTERS_RGB = (0.02, 0.02, 0.02), (0.45, 0.45, 0.47)  # black base, grey letters
 
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else ["Saori"]
@@ -39,7 +46,7 @@ BASE_T, TOP = (float(args[3]), float(args[4])) if len(args) >= 5 else (3.0, 5.0)
 # (two-line names have twice the letter surface, so the grid is sqrt(lines) coarser)
 VOXEL_BASE, VOXEL_LETTERS = (v * max(1.0, WIDTH / 60.0) * math.sqrt(NAME.count("\n") + 1)
                              for v in (VOXEL_BASE, VOXEL_LETTERS))
-TAG = "_".join(NAME.upper().split()) + "_SCRIPT_KEYRING"   # spaces/line breaks -> _
+TAG = "_".join(NAME.upper().split()) + ("_ROBOT" if LOGO == "robot" else "") + "_SCRIPT_KEYRING"   # spaces/line breaks -> _
 
 
 def clean():
@@ -77,11 +84,62 @@ def text_mesh(size, z0, z1):
     m = to_mesh(ob)
     bpy.context.view_layer.objects.active = m; m.select_set(True)
     bpy.ops.object.transform_apply(location=True)
+    cuts = add_robot(m, size, z0, z1) if LOGO == "robot" else []
     xs = [v.co.x for v in m.data.vertices]; ys = [v.co.y for v in m.data.vertices]
     dx, dy = -min(xs), -(min(ys) + max(ys)) / 2
     for v in m.data.vertices:
         v.co.x += dx; v.co.y += dy
+    ROBOT_CUTS[:] = [[(x + dx, y + dy) for x, y in c] for c in cuts]
     return m
+
+
+def prism(pts, z0, z1, name="p"):
+    """Closed mesh: polygon pts (x, y) extruded from z0 to z1."""
+    me = bpy.data.meshes.new(name); bm = bmesh.new()
+    f = bm.faces.new([bm.verts.new((x, y, z0)) for x, y in pts])
+    ext = bmesh.ops.extrude_face_region(bm, geom=[f])
+    for v in ext["geom"]:
+        if isinstance(v, bmesh.types.BMVert):
+            v.co.z = z1
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me); bm.free()
+    ob = bpy.data.objects.new(name, me); bpy.context.collection.objects.link(ob)
+    return ob
+
+
+def rrect(cx, cy, w, h, r, n=10):
+    pts = []
+    for qx, qy, a0 in [(1, 1, 0), (-1, 1, 90), (-1, -1, 180), (1, -1, 270)]:
+        for i in range(n + 1):
+            a = math.radians(a0 + 90 * i / n)
+            pts.append((cx + qx * (w / 2 - r) + r * math.cos(a), cy + qy * (h / 2 - r) + r * math.sin(a)))
+    return pts
+
+
+def circle(cx, cy, d, n=40):
+    return [(cx + d / 2 * math.cos(2 * math.pi * i / n), cy + d / 2 * math.sin(2 * math.pi * i / n)) for i in range(n)]
+
+
+def add_robot(m, size, z0, z1):
+    """Join a robot head (rounded head, side ears, antenna stem) above the letters into m.
+    Returns the eye and mouth outlines, which are cut out of the letters part later."""
+    xs = [v.co.x for v in m.data.vertices]; ys = [v.co.y for v in m.data.vertices]
+    W = ROBOT_W * size; H = 0.78 * W
+    cx = (min(xs) + max(xs)) / 2
+    cy = max(ys) + ROBOT_GAP * size + H / 2
+    ear_w, ear_h = 0.13 * W, 0.40 * H
+    ant_w, ant_h = 0.12 * W, 0.22 * W
+    parts = [prism(rrect(cx, cy, W, H, 0.2 * W), z0, z1),
+             prism(rrect(cx - W / 2 - ear_w / 2 + 0.05 * W, cy, ear_w + 0.1 * W, ear_h, 0.04 * W), z0, z1),
+             prism(rrect(cx + W / 2 + ear_w / 2 - 0.05 * W, cy, ear_w + 0.1 * W, ear_h, 0.04 * W), z0, z1),
+             prism(rrect(cx, cy + H / 2 + ant_h / 2 - 0.05 * W, ant_w, ant_h + 0.1 * W, 0.02 * W), z0, z1)]
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in [m] + parts:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = m; bpy.ops.object.join()
+    return [circle(cx - 0.22 * W, cy + 0.08 * H, 0.21 * W),
+            circle(cx + 0.22 * W, cy + 0.08 * H, 0.21 * W),
+            rrect(cx, cy - 0.24 * H, 0.46 * W, 0.11 * W, 0.04 * W)]
 
 
 def sdf(obj, voxel, offset=0.0):
@@ -134,6 +192,9 @@ def hole_centre(pts, hole_r):
     as close to the letters as the clearance allows."""
     xmin = min(p[0] for p in pts); ymax = max(p[1] for p in pts)
     need = hole_r + HOLE_CLEAR
+    if LOGO == "robot":                      # on top of the antenna (the highest point)
+        top = [p for p in pts if p[1] > ymax - 0.05]
+        return sum(p[0] for p in top) / len(top), ymax + need
     y = ymax + TAB_RISE
     x = xmin + 3.0
     while min(math.hypot(px - x, py - y) for px, py in pts) < need:
@@ -254,6 +315,8 @@ base = build_base(size)
 letters = text_mesh(size, BASE_T - 0.5, TOP)
 sdf(letters, VOXEL_LETTERS)
 slab(letters, BASE_T, TOP)
+for c in ROBOT_CUTS:                         # robot eyes and mouth: down to the base
+    boolean(letters, prism(c, BASE_T - 1.0, TOP + 1.0), 'DIFFERENCE')
 
 # 3) stretch Y so the overall size is exactly WIDTH x HEIGHT, then centre on the origin
 x0, x1, y0, y1 = bbox2d([base])
