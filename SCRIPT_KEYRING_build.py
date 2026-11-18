@@ -16,7 +16,7 @@ grown by OUTLINE + CLOSE and shrunk back by CLOSE. That gives a smooth border of
 and fills the small gaps inside and between the letters, like the original.
 Colours only affect the Blender view: the real ones are the filaments you load.
 """
-import bpy, bmesh, os, sys, math
+import bpy, bmesh, os, sys, math, unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONT = os.path.join(HERE, "fonts", "Lobster-Regular.otf")  # bundled script font (OFL)
@@ -46,7 +46,7 @@ BASE_T, TOP = (float(args[3]), float(args[4])) if len(args) >= 5 else (3.0, 5.0)
 # (two-line names have twice the letter surface, so the grid is sqrt(lines) coarser)
 VOXEL_BASE, VOXEL_LETTERS = (v * max(1.0, WIDTH / 60.0) * math.sqrt(NAME.count("\n") + 1)
                              for v in (VOXEL_BASE, VOXEL_LETTERS))
-TAG = "_".join(NAME.upper().split()) + ("_ROBOT" if LOGO == "robot" else "") + "_SCRIPT_KEYRING"   # spaces/line breaks -> _
+TAG = "_".join(unicodedata.normalize("NFKD", NAME.upper()).encode("ascii", "ignore").decode().split()) + ("_ROBOT" if LOGO == "robot" else "") + "_SCRIPT_KEYRING"   # ASCII (Ó -> O); spaces/line breaks -> _
 
 
 def clean():
