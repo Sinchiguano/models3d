@@ -142,6 +142,7 @@ def build(name):
                           global_scale=1.0)
     print("BUILT", tag, "dims", tuple(round(d, 2) for d in plate.dimensions), "text", tuple(round(d, 2) for d in text_dims))
 
-argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else ["CESAR"]
-for n in argv:
-    build(n)
+if __name__ == "__main__":
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else ["CESAR"]
+    for n in argv:
+        build(n)
