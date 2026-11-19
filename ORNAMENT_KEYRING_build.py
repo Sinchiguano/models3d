@@ -1,13 +1,14 @@
 """Two-colour ornament keyring traced from a picture (style of "new one.jpeg": red line art on white).
 
 Usage: blender -b --python ORNAMENT_KEYRING_build.py -- IMAGE NAME [DIAMETER [BASE_T TOP]]
-Example: blender -b --python ORNAMENT_KEYRING_build.py -- "new one.jpeg" César 70 3 6
+Example: OPEN=317,728 blender -b --python ORNAMENT_KEYRING_build.py -- "new one.jpeg" César 70 3 6
 
 How the picture is read:
   * dark (red) pixels are the line art; white areas are split into connected regions
   * the white region touching the picture border is the outside
   * "pockets" = white regions running along the inside of the outer ring (big contact): open holes
   * every other white region (letters, bow, snowflakes, faces ...) is a raised shape
+  * OPEN="x,y;..." (env var, picture pixels from the top left) cuts more white regions through
   * the hanging loop's hole is replaced by a round HOLE_D hole at the same place
 Result: base (colour 1, z 0..BASE_T) = line art + raised shapes; top (colour 2, BASE_T..TOP) = raised
 shapes, so the line art shows as grooves between them, like the picture. DIAMETER is the overall width.
@@ -203,6 +204,13 @@ contact = np.bincount(lab[white_in & (dist <= rw + 8)], minlength=n + 1)
 too_close = np.bincount(lab[white_in & (dist < 0.6 * rw)], minlength=n + 1)
 sizes = np.bincount(lab.ravel(), minlength=n + 1)
 pockets = [k for k in range(1, n + 1) if k != lab[0, 0] and contact[k] >= POCKET_CONTACT and too_close[k] == 0]
+# OPEN="x,y;x,y": extra white regions to cut through, picked by a point in the picture
+# (pixels from the top-left corner, e.g. the inside of a letter C)
+for xy in filter(None, os.environ.get("OPEN", "").split(";")):
+    x, y = (int(float(c)) for c in xy.split(","))
+    k = lab[red.shape[0] - 4 - y, x + 3]                 # picture is padded by 3 px and stored bottom-up
+    if k and k != lab[0, 0] and k not in pockets:
+        pockets.append(k); print(f"OPEN region {k} at {x},{y}: {sizes[k]} px")
 # hanging-loop hole: the region closest to the top of the outline (small, above everything else)
 ys, xs = np.nonzero(~outside)
 top_y = ys.max()
